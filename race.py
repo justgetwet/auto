@@ -39,7 +39,7 @@ class Scrape:
     else:
       return True
 
-class RaceSite:
+class RaceUrls:
 
   url_oddspark = "https://www.oddspark.com/autorace"
   
@@ -58,7 +58,7 @@ class RaceSite:
   placeEn_d = {'川口': 'kawaguchi', '伊勢崎': 'isesaki', '浜松': 'hamamatsu',\
               '飯塚': 'iiduka', '山陽': 'sanyo'}
 
-class Race(Scrape, RaceSite):
+class Race(Scrape, RaceUrls):
 
   def tuple_string_for_copy(self, s):
     # ("20210606", "飯塚") を作成
@@ -111,11 +111,18 @@ class Race(Scrape, RaceSite):
     
     return races
           
-  def kaisai(self):
+  def p_kaisai(self):
     races = self.kaisaiRaces()
     for race in races:
-      if race[-1:] == "*":
-        print(race)
+      # if race[-1:] == "*":
+      print(race)
+
+  def kaisai_today(self):
+    races = self.kaisaiRaces()
+    lst = [r for r in races if r[-1] == "*"]
+    if not lst:
+      lst = [r for r in races if r[-1] == "$"]
+    return lst
 
   def tomorrow(self):
     dt_now = datetime.datetime.now()
@@ -125,26 +132,35 @@ class Race(Scrape, RaceSite):
     
     return yyyymmdd
 
-  def entries(self):
-    race = "2021年8月10日(火) 山陽 ??:?? ('20210810','山陽')"
-    date_str = race.split()[0][:-3]
-    date_dt = datetime.datetime.strptime(date_str, "%Y年%m月%d日")
-    yyyymmdd = date_dt.strftime("%Y%m%d")
-    pcd = self.placeCd_d[race.split()[1]]
+  def entries(self, tpl_race=None):
+    if tpl_race:
+      yyyymmdd = tpl_race[0]
+      place = tpl_race[1]
+    else:
+      races = self.kaisai_today()
+      race = races[0]
+      date_str = race.split()[0][:-3]
+      place = race.split()[1]
+      date_dt = datetime.datetime.strptime(date_str, "%Y年%m月%d日")
+      yyyymmdd = date_dt.strftime("%Y%m%d")
+    pcd = self.placeCd_d[place]
     url = self.url_oneday + f"raceDy={yyyymmdd}&placeCd={pcd}"
     soup = self.get_soup(url)
-    date_place = soup.title.string.split("｜")[0]
+    held = soup.title.string.split("｜")[0]
     r_names = soup.select("[class='w380px bl-left'] a") # 1R 一般戦B 3100m
     s_times = soup.select("[class='w380px bl-left'] [class='start-time'] strong")
     titles = [re.sub("\xa0", " ", r.text) + " " + t.text for r, t in zip(r_names, s_times)]
     dfs = self.get_dfs(soup)
     
-    return date_place, titles, dfs
+    return held, titles, dfs
 
 if __name__ == '__main__':
 
   r = Race()
-  date_place, titles, dfs = r.entries()
-  print(date_place)
-  print(titles[0])
+  r.p_kaisai()
+  print(r.kaisai_today())
+  race = ("20210814", "伊勢崎")
+  # held, titles, dfs = r.entries(race)
+  # print(held)
+  # print(titles[0])
   # print(dfs[0])
