@@ -55,7 +55,7 @@ class TkRaces:
     l_title.grid(row=row, column=0, sticky=tk.W, pady=10, padx=10)
     # b_quit = ttk.Button(frame, text='Quit', command=lambda: self.root.quit())
     r = int(title.split("R")[0])
-    b_quit = ttk.Button(frame, text='Push', command=lambda: self.push(r))
+    b_quit = ttk.Button(frame, text='detail', command=lambda: self.show_detail(r))
     b_quit.grid(row=row, column=1, sticky=tk.E, pady=10, padx=10)
 
     # treeview
@@ -109,12 +109,13 @@ class TkRaces:
 
     return sizes
 
-  def push(self, r: int):
+  def show_detail(self, r: int):
     tp = (self.yyyymmdd, self.place, r)
     race = OneRace(*tp)
     title = race.racetitle
-    df = race.entry()
-    t = TkRace(title, df)
+    r_df = race.entry_raps()
+    l_df = race.entry_latests()
+    t = TkRace(title, [r_df, l_df])
     t.run()
 
   def run(self):

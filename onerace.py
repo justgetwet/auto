@@ -1,12 +1,22 @@
+import numpy as np
 import pandas as pd
 import re
 import json
+import datetime
 import copy
 import seaborn as sns
 from racers import Racers
 # pd.set_option('display.max_columns', 22)
 # from race import Scrape, RaceUrls
 from racers import Racers
+
+# url_racelist = url_oddspark + "/RaceList.do?"
+# url_odds = url_oddspark + "/Odds.do?"
+# url_pred = url_oddspark + "/yosou"
+# url_result = url_oddspark + "/RaceResult.do?"
+# url_kaisai = url_oddspark + "/KaisaiRaceList.do"
+
+# url_oneday = url_oddspark + "/OneDayRaceList.do?"
 
 class OneRace(Racers):
 
@@ -20,6 +30,8 @@ class OneRace(Racers):
     self.p_predai = f"/ai/OneDayRaceList.do?raceDy={date}&placeCd={self.placeCd_d[place]}&aiId=1"
     
     self.entry_soup = self.get_soup(self.url_racelist + self.p_race)
+    # self.pred_soup = self.get_soup(self.url_pred + self.p_pred)
+
     self.result_soup = self.get_soup(self.url_result + self.p_race)
     
     self.pred_soup = ""
@@ -33,6 +45,13 @@ class OneRace(Racers):
     self.racetitle = self.raceTitle()
     # print(self.racetitle)
 
+  def sr_racer_latest(self) -> pd.Series:
+    name = "Latest"
+    lst = ["no", "選手名", "q10/90", "t10/90", "dry/wet", "LG"]
+    lst += ["次走", "前走", "前々走", "3走前", "4走前", "5走前"]
+    sr = pd.Series([np.nan] * len(lst), index=lst, name=name, dtype=object)
+
+    return sr
 
   def raceTitle(self):
     # 一般戦 2021年6月25日(金) 伊勢崎 3R 15:21
@@ -52,7 +71,7 @@ class OneRace(Racers):
     title = " ".join([shubetsu, race, start_time, weather, surface])
     return title
       
-  def entry(self):
+  def entry_raps(self):
 
     df = self.get_dfs(self.entry_soup)[0]
     if df.empty: 
@@ -111,9 +130,68 @@ class OneRace(Racers):
         sr["fsm"] = round(fstDif, 1)
         sr["pdm"] = round(prdDif, 1)
     
-    entry_df = pd.DataFrame(sr_lst).dropna(how="all", axis=1)
+    raps_df = pd.DataFrame(sr_lst).dropna(how="all", axis=1)
     
-    return entry_df
+    return raps_df
+
+  def entry_latests(self) -> pd.DataFrame:
+
+    title = self.racetitle
+    date_str = title.split()[1][:-3]
+    date_dt = datetime.datetime.strptime(date_str, "%Y年%m月%d日")
+    dt = str(date_dt.month) + "/" + str(date_dt.day)
+    rc = "".join(title.split()[2:4])
+    thisrace = " ".join([dt, rc])
+    thiscond = title.split()[6][1]
+
+    df = self.get_dfs(self.entry_soup)[0]
+    names = [df.iloc[n, :2] for n in range(len(df))]
+    lgs = ["".join(df.iloc[n, 2].split()) for n in range(len(df))]
+    rates = [df.iloc[n, 6] for n in range(len(df))]
+    drywet = [df.iloc[n, 7] for n in range(len(df))]
+    handis = [df.iloc[n, 3].split()[0] for n in range(len(df))]
+    latest = [df.iloc[n, 8:] for n in range(len(df))]
+    srs = []
+    for i in range(len(df)*2):
+      sr = self.sr_racer_latest()
+      j = i // 2
+      if not i & 1:
+        sr.name = i
+        sr["no"] = names[j][0]
+        sr["選手名"] = " ".join(names[j][1].split()[:2])
+        sr["q10/90"] = rates[j].split()[3].strip("：")
+        sr["t10/90"] = rates[j].split()[5].strip("：")
+        sr["dry/wet"] = drywet[j].split()[1].strip("良：")
+        sr["LG"] = lgs[j]
+        lst5 = latest[j]["前5走成績"]
+        sr["次走"] = thisrace
+        sr["前走"] = " ".join(lst5["前走"].split()[:2])
+        sr["前々走"] = " ".join(lst5["前々走"].split()[:2])
+        sr["3走前"] = " ".join(lst5["3走前"].split()[:2])
+        sr["4走前"] = " ".join(lst5["4走前"].split()[:2])
+        sr["5走前"] = " ".join(lst5["5走前"].split()[:2])
+        srs.append(sr)
+      else:
+        sr.name = i
+        sr["no"] = " "
+        sr["選手名"] = " "
+        sr["q10/90"] = rates[j].split()[9].strip("：")
+        sr["t10/90"] = rates[j].split()[11].strip("：")
+        sr["dry/wet"] = drywet[j].split()[3].strip("湿：")
+        sr["LG"] = " "
+        lst5 = latest[j]["前5走成績"]
+        sr["次走"] = thiscond + " " + handis[j] + " ?着"
+        sr["前走"] = " ".join(lst5["前走"].split()[2:5])
+        sr["前々走"] = " ".join(lst5["前々走"].split()[2:5])
+        sr["3走前"] = " ".join(lst5["3走前"].split()[2:5])
+        sr["4走前"] = " ".join(lst5["4走前"].split()[2:5])
+        sr["5走前"] = " ".join(lst5["5走前"].split()[2:5])
+        srs.append(sr)
+    
+    e_df = pd.DataFrame(srs)
+    p_df = self.predction_for_concat()
+
+    return pd.concat([e_df, p_df], axis=1)
 
   def dspEntry(self):
     df = self.entry().dropna(how="all", axis=1)
@@ -174,8 +252,7 @@ class OneRace(Racers):
     self.saveDf2json(df)
 
   def reqPrediction(self):
-    url = self.url_pred + self.p_pred
-    soup = self.get_soup(url)
+    soup = self.get_soup(self.url_pred + self.p_pred)
     lst = soup.find_all("p", class_="sohyo")
     sohyo = "総評:" + lst[self.race_no - 1].find("strong").text.strip("（総評）")
     dfs = self.get_dfs(soup)
@@ -187,15 +264,42 @@ class OneRace(Racers):
         
     return pd.DataFrame(lst, columns=["晴", "ST", "Commnet"]) #, sohyo
 
+  def predction_for_concat(self):
+    ai_df = self.reqPredicionAI()
+    p_df = self.reqPrediction()
+    lst = []
+    for ai, p in zip(ai_df.itertuples(), p_df.itertuples()):
+        lst.append(ai[1:] + p[1:])
+        lst.append((" ", " ", " ", " ", " ", " "))
+    cols = list(ai_df.columns) + list(p_df.columns)
+    
+    return pd.DataFrame(lst, columns=cols)
+    
+  def reqPredicionAI(self):
+    soup = self.get_soup(self.url_pred + self.p_predai)
+    dfs = self.get_dfs(soup)
+    df = dfs[self.race_no - 1]
+    lst = []
+    for i in range(len(df)):
+      steady = df.iloc[i, 4:7]["AI予想印"][0]
+      oneshot = df.iloc[i, 4:7]["AI予想印"][1]
+      justbe4 = df.iloc[i, 4:7]["AI予想印"][2]
+      lst.append((steady, oneshot, justbe4))
+    
+    return pd.DataFrame(lst, columns=["堅実", "一発", "直前"])
+
+
+
 if __name__=='__main__':
 
-  race = OneRace('20210815','伊勢崎', 10)
+  race = OneRace('20210817','飯塚', 10)
   print(race.racetitle)
-  # df = race.entry()
-  df = race.reqPrediction()
-  print(df)
-  # race.savResult()
+  # df = race.reqPrediction()
+  # df = race.entry_latests()
   # print(df)
+  df = race.predction_for_concat()
+  # race.savResult()
+  print(df)
     
   # sr = race.srPayout()
   # print(sr)
