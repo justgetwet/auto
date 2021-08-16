@@ -16,7 +16,7 @@ class TkRaces:
     self.titles = titles
     self.dfs = dfs
     sizes = self.column_sizes(dfs[0])
-    w = sum(map(lambda x: x+8, sizes)) + 60
+    w = sum(map(lambda x: x+8, sizes)) + 50
     self.root.geometry(f"{w}x900+200+50")
     
     date_str = tk_title.split()[0][:-3]
