@@ -113,9 +113,10 @@ class TkRaces:
     tp = (self.yyyymmdd, self.place, r)
     race = OneRace(*tp)
     title = race.racetitle
-    r_df = race.entry_raps()
-    l_df = race.entry_latests()
-    t = TkRace(title, [r_df, l_df])
+    raps_df = race.entry_raps()
+    latests_df = race.entry_latests()
+    dfs = [raps_df, latests_df]
+    t = TkRace(title, dfs, tp)
     t.run()
 
   def run(self):
@@ -133,7 +134,7 @@ if __name__ == '__main__':
   # df = iris.head(6)
   # dfs = [df]
   r = Race()
-  # t_race = ("20210814", "伊勢崎")
+  tpl = ("20210817", "飯塚")
   held, titles, dfs = r.entries()
   t = TkRaces(held, titles, dfs)
   t.run()

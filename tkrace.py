@@ -2,14 +2,17 @@ import tkinter as tk
 from tkinter import ttk
 import pandas as pd
 import unicodedata
-# import seaborn as sns
+import seaborn as sns
 from onerace import OneRace
+from odds import RaceOdds
+from tkodds import TkOdds
 
 class TkRace:
   
-  def __init__(self, title: str, dfs: list):
+  def __init__(self, title: str, dfs: list, tpl: tuple):
     self.root = tk.Toplevel()
     # self.root = tk.Tk()
+    self.tpl = tpl
     self.root.title("Auto Race")
     self.rap_df = dfs[0]
     self.lst_df = dfs[1]
@@ -27,7 +30,7 @@ class TkRace:
     l_title = tk.Label(f_toolbar, text=self.title, anchor="w")
     l_title.pack(side=tk.LEFT, expand=True, anchor=tk.W)
 
-    b_quit = ttk.Button(f_toolbar, text='Quit', command=lambda: self.root.quit())
+    b_quit = ttk.Button(f_toolbar, text='Odds', command=lambda: self.show_odds())
     b_quit.pack(side=tk.LEFT, expand=True, anchor=tk.E)
 
   def set_raps_on_frame(self):
@@ -127,6 +130,17 @@ class TkRace:
       sizes.append(max_size)
 
     return sizes
+
+  def show_odds(self):
+    ro = RaceOdds(*self.tpl)
+    win = ro.reqWin()
+    quin = ro.reqQuin()
+    exa = ro.reqExa()
+    trio = ro.reqTrio()
+    trif = ro.reqTrif()
+    dfs = [win, quin, exa, trio, trif]
+    t = TkOdds(self.title, dfs)
+    t.run()
 
   def run(self):
     self.set_toolbar_frame()
