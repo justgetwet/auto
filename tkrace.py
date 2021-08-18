@@ -24,11 +24,11 @@ class TkRace:
     sizes = self.column_sizes(self.lst_df)
     w = sum(map(lambda x: x+8, sizes)) + 60
     h = 800
-    self.root.geometry(f"{w}x{h}+200+50")
+    self.root.geometry(f"{w}x{h}+100+50")
     self.title = title
     self.frame = tk.Frame(self.root)
 
-  def set_toolbar_frame(self):
+  def set_topbar_frame(self):
     f_topbar = tk.Frame(self.frame, height=50, pady=0, padx=5)
     f_topbar.pack(fill=tk.X)
     
@@ -44,13 +44,14 @@ class TkRace:
     colors = ["white", "black", "red", "blue", "yellow", "green", "orange"]
     colors = colors[:len(ranks)]
     for r, n, c in zip(ranks, names, colors):
-      canvas = tk.Canvas(f_images, height=63, width=60, bg=c)
+      canvas = tk.Canvas(f_images, height=63, width=58, bg=c)
       canvas.pack(side=tk.LEFT)
       im_p = "./images/" + r + "_" + "".join(n.split()) + ".png"
       im = Image.open(im_p)
+      # im.size -> 60 x 60
       img = ImageTk.PhotoImage(im)
       self.images.append(img)
-      canvas.create_image(3, 3, image=img, anchor=tk.NW)
+      canvas.create_image(0, 0, image=img, anchor=tk.NW)
 
     f_images.pack(side=tk.LEFT, anchor=tk.W)
 
@@ -120,11 +121,11 @@ class TkRace:
     trio = ro.reqTrio()
     trif = ro.reqTrif()
     dfs = [win, quin, exa, trio, trif]
-    t = TkOdds(self.title, dfs)
+    t = TkOdds(self.title, dfs, self.tpl)
     t.run()
 
   def run(self):
-    self.set_toolbar_frame()
+    self.set_topbar_frame()
     self.set_table(self.rap_df)
     self.set_table(self.lst_df)
     self.frame.pack()

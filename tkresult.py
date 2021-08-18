@@ -6,38 +6,27 @@ import seaborn as sns
 from onerace import OneRace
 from odds import RaceOdds
 from result import Result
-from tkresult import TkResult
 
-class TkOdds:
+class TkResult:
   
-  def __init__(self, title: str, dfs: list, tpl: tuple):
+  def __init__(self, title: str, dfs: list):
     self.root = tk.Toplevel()
     # self.root = tk.Tk()
-    self.tpl = tpl
     self.root.title(title)
     self.frame = tk.Frame(self.root)
-    self.frame_left = tk.Frame(self.frame)
-    self.frame_right = tk.Frame(self.frame)
-    self.win_df = dfs[0]
-    self.quin_df = dfs[1]
-    self.exa_df = dfs[2]
-    self.trio_df = dfs[3]
-    self.trif_df = dfs[4]
-    
-    w = 0
-    for df in dfs:
-      sizes = self.column_sizes(df)
-      w += sum(map(lambda x: x+8, sizes)) + 30
-    h = 500
-    self.root.geometry(f"{w}x{h}+200+250")
+    self.rlt_df = dfs[0]
+    self.note_df = dfs[1]
+    self.pay1_df = dfs[2]
+    self.pay2_df = dfs[3]
+
+    sizes = self.column_sizes(self.rlt_df)
+    w = sum(map(lambda x: x+8, sizes)) + 30
+    h = 650
+    self.root.geometry(f"{w}x{h}+300+350")
     self.title = title
 
-  def button_result(self, frame: tk.Frame, side: object):
-    b_result = ttk.Button(frame, text='result',command=lambda: self.show_result())
-    b_result.pack(side=side, pady=5, padx=10, anchor=tk.NW)
-
-  def set_table(self, frame: tk.Frame, df: pd.DataFrame, side: object):
-    f_table = tk.Frame(frame, pady=5, padx=5)
+  def set_table(self, df: pd.DataFrame, side: object):
+    f_table = tk.Frame(self.frame, pady=5, padx=5)
     headingcolor = "lightgrey"
     alternatecolor = "whitesmoke"
 
@@ -93,26 +82,11 @@ class TkOdds:
 
     return sizes
 
-  def show_result(self):
-    r = Result(*self.tpl)
-    title = r.raceTitle()
-    rslt = r.result()
-    note = r.groundnote()
-    pay = r.payout()
-    dfs = [rslt, note, *pay]
-    t = TkResult(title, dfs)
-    t.run()
-
-
   def run(self):
-    self.set_table(self.frame_left, self.win_df, tk.TOP)
-    self.button_result(self.frame_left, tk.TOP)
-    self.frame_left.pack(side=tk.LEFT, anchor=tk.N)
-    self.set_table(self.frame_right, self.quin_df, tk.LEFT)
-    self.set_table(self.frame_right, self.exa_df, tk.LEFT)
-    self.set_table(self.frame_right, self.trio_df, tk.LEFT)
-    self.set_table(self.frame_right, self.trif_df, tk.LEFT)
-    self.frame_right.pack(side=tk.LEFT, anchor=tk.NW)
+    self.set_table(self.rlt_df, tk.TOP)
+    self.set_table(self.note_df, tk.TOP)
+    self.set_table(self.pay1_df, tk.LEFT)
+    self.set_table(self.pay2_df, tk.LEFT)
     self.frame.pack()
     self.root.mainloop()
 
@@ -121,12 +95,11 @@ if __name__ == '__main__':
   # iris = sns.load_dataset('iris')
   # df = iris.head(6)
   # dfs = [df]
-  ro = RaceOdds('20210818','飯塚', 3)
-  win = ro.reqWin()
-  quin = ro.reqQuin()
-  exa = ro.reqExa()
-  trio = ro.reqTrio()
-  trif = ro.reqTrif()
-  dfs = [win, quin, exa, trio, trif]
-  t = TkOdds("odds data", dfs)
+  r = Result('20210818','飯塚', 3)
+  title = r.raceTitle()
+  rslt = r.result()
+  note = r.groundnote()
+  pay = r.payout()
+  dfs = [rslt, note, *pay]
+  t = TkResult(title, dfs)
   t.run()

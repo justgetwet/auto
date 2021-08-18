@@ -293,7 +293,7 @@ class OneRace(Racers):
 if __name__=='__main__':
 
   race = OneRace('20210817','飯塚', 10)
-  print(race.racetitle)
+  print(race.racetitle) 
   # df = race.reqPrediction()
   # df = race.entry_latests()
   # print(df)
