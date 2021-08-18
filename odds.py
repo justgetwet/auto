@@ -59,8 +59,9 @@ class RaceOdds(Racers):
     df = pd.DataFrame()
     if not dfs[0].empty:
       _df = self.get_dfs(soup)[0]
-      cols = [3, 4, 5, 6, 7, 8]
+      cols = [4, 5, 6, 7, 8]
       df = _df.drop(_df.columns[cols], axis=1).fillna("")
+      df.columns = ["車番", "選手名", "単勝", "複勝"]
     
     return df
 
@@ -120,7 +121,7 @@ class RaceOdds(Racers):
 
 if __name__ == '__main__':
   
-  race = RaceOdds('20210818','飯塚', 3)
+  race = RaceOdds('20210818','飯塚', 6)
   # df = race.reqWin()
   # print(df)
   # df = race.reqQuin()

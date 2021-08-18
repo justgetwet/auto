@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 import pandas as pd
 import unicodedata
 import seaborn as sns
@@ -13,9 +14,13 @@ class TkRace:
     self.root = tk.Toplevel()
     # self.root = tk.Tk()
     self.tpl = tpl
-    self.root.title("Auto Race")
-    self.rap_df = dfs[0]
-    self.lst_df = dfs[1]
+    self.images = []
+    self.root.title(title)
+    self.dfs = [pd.DataFrame(), pd.DataFrame()]
+    if len(dfs) == 2:
+      self.dfs = dfs
+    self.rap_df = self.dfs[0]
+    self.lst_df = self.dfs[1]
     sizes = self.column_sizes(self.lst_df)
     w = sum(map(lambda x: x+8, sizes)) + 60
     h = 800
@@ -24,22 +29,37 @@ class TkRace:
     self.frame = tk.Frame(self.root)
 
   def set_toolbar_frame(self):
-    f_toolbar = tk.Frame(self.frame, height=50, pady=10, padx=10)
-    f_toolbar.pack(fill=tk.X)
+    f_topbar = tk.Frame(self.frame, height=50, pady=0, padx=5)
+    f_topbar.pack(fill=tk.X)
     
-    l_title = tk.Label(f_toolbar, text=self.title, anchor="w")
-    l_title.pack(side=tk.LEFT, expand=True, anchor=tk.W)
+    self.set_images(f_topbar)
 
-    b_quit = ttk.Button(f_toolbar, text='Odds', command=lambda: self.show_odds())
+    b_quit = ttk.Button(f_topbar, text='Odds', command=lambda: self.show_odds())
     b_quit.pack(side=tk.LEFT, expand=True, anchor=tk.E)
 
-  def set_raps_on_frame(self):
-    f_raps = tk.Frame(self.frame, pady=10, padx=10)
-    df = self.rap_df
+  def set_images(self, frame):
+    f_images = tk.Frame(frame, pady=5, padx=5)
+    ranks = self.rap_df["rank"]
+    names = self.rap_df["name"]
+    colors = ["white", "black", "red", "blue", "yellow", "green", "orange"]
+    colors = colors[:len(ranks)]
+    for r, n, c in zip(ranks, names, colors):
+      canvas = tk.Canvas(f_images, height=63, width=60, bg=c)
+      canvas.pack(side=tk.LEFT)
+      im_p = "./images/" + r + "_" + "".join(n.split()) + ".png"
+      im = Image.open(im_p)
+      img = ImageTk.PhotoImage(im)
+      self.images.append(img)
+      canvas.create_image(3, 3, image=img, anchor=tk.NW)
+
+    f_images.pack(side=tk.LEFT, anchor=tk.W)
+
+  def set_table(self, df: pd.DataFrame):
+    f_table = tk.Frame(self.frame, pady=0, padx=5)
     headingcolor = "lightgrey"
     alternatecolor = "whitesmoke"
 
-    tree = ttk.Treeview(f_raps, height=len(df)+1)
+    tree = ttk.Treeview(f_table, height=len(df)+1)
 
     def fixed_map(option):
       # Fix for setting text colour for Tkinter 8.6.9
@@ -69,48 +89,9 @@ class TkRace:
       if i & 1:
         tree.tag_configure(i, background=alternatecolor)
     
-    tree.pack(pady=10, padx=10)
+    tree.pack(pady=5, padx=5)
     # f_raps.pack(fill=tk.BOTH, anchor=tk.W)
-    f_raps.pack(side="top", expand=0, anchor=tk.W)
-
-  def set_latest_on_frame(self):
-    f_latest = tk.Frame(self.frame, pady=10, padx=10)
-    df = self.lst_df
-    headingcolor = "lightgrey"
-    alternatecolor = "whitesmoke"
-
-    tree = ttk.Treeview(f_latest, height=len(df)+1)
-
-    def fixed_map(option):
-      # Fix for setting text colour for Tkinter 8.6.9
-      # From: https://core.tcl.tk/tk/info/509cafafae
-      #
-      # From: https://ja.stackoverflow.com/questions/64095/
-      # Python ttk.Treeview python3.7でリストに割り当てたtagに対して色を設定する方法
-      return [elm for elm in style.map('Treeview', query_opt=option) if elm[:2] != ('!disabled', '!selected')]	
-    
-    style = ttk.Style()
-    style.theme_use("default")
-    style.configure("Treeview.Heading", background=headingcolor)
-    style.map('Treeview', foreground=fixed_map('foreground'), background=fixed_map('background'))
-    
-    tree["show"] = "headings"
-    cols = tuple(range(1, len(df.columns)+1))
-    tree['columns'] = cols
-
-    sizes = self.column_sizes(df)
-    for i, col, size in zip(cols, df.columns, sizes):
-      tree.heading(i, text=f"{col}")
-      tree.column(i, width=size+8)
-    
-    tpls = [tuple(t)[1:] for t in df.itertuples()]
-    for i, tpl in enumerate(tpls):
-      tree.insert("", "end", tags=i, values=tpl)
-      if i & 1:
-        tree.tag_configure(i, background=alternatecolor)
-    
-    tree.pack(pady=10, padx=10)
-    f_latest.pack(fill=tk.BOTH)
+    f_table.pack(side="top", expand=0, anchor=tk.W)
 
   def column_sizes(self, df: pd.DataFrame) -> list:
 
@@ -144,16 +125,18 @@ class TkRace:
 
   def run(self):
     self.set_toolbar_frame()
-    self.set_raps_on_frame()
-    self.set_latest_on_frame()
+    self.set_table(self.rap_df)
+    self.set_table(self.lst_df)
     self.frame.pack()
     self.root.mainloop()
 
 if __name__ == '__main__':
   
-  race = OneRace('20210816','飯塚', 3)
+  tpl = ('20210816','飯塚', 3)
+  race = OneRace(*tpl)
   title = race.racetitle
-  r_df = race.entry_raps()
-  l_df = race.entry_latests()
-  t = TkRace(title, [r_df, l_df])
+  raps = race.entry_raps()
+  latests = race.entry_latests()
+  dfs = [raps, latests]
+  t = TkRace(title, dfs, tpl)
   t.run()
