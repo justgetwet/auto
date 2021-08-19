@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import urllib.request
 from bs4 import BeautifulSoup
 import numpy as np
@@ -7,7 +6,6 @@ import re
 # import json
 import pathlib
 import datetime
-from tkdf import TkDf
 
 class Scrape:
 
