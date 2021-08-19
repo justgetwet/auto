@@ -135,6 +135,6 @@ if __name__ == '__main__':
   # dfs = [df]
   r = Race()
   tpl = ("20210817", "飯塚")
-  held, titles, dfs = r.entries(tpl)
+  held, titles, dfs = r.entries()
   t = TkRaces(held, titles, dfs)
   t.run()

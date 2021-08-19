@@ -65,35 +65,28 @@ class Result(Racers):
     return title
 
   def result(self):
+    df = pd.DataFrame()
+    dfs = self.get_dfs(self.result_soup)
+    if len(dfs) > 0:
+      df = self.get_dfs(self.result_soup)[0]
 
-    df = self.get_dfs(self.result_soup)[0]
-    if df.empty: 
-      return df
-    # s_df = df.sort_values('車')
-    # sr_odr, sr_fav = s_df["着"], s_df["人気"]
-    # odrs = [str(int(odr)) if self.is_num(odr) else odr for odr in sr_odr]
-    # favs = [str(int(fav)) if self.is_num(fav) else fav for fav in sr_fav]
-    # laps = list(s_df["競走タイム"])
-    # hands = list(s_df["ハンデ"])
-    # goalDiffs = self.calc_goalDifs(laps, hands)
-    # result_df = self.entry()
-    # for n in range(len(result_df)): 
-    #   result_df.loc[n, "run"] = laps[n]
-    #   result_df.loc[n, "rnm"] = goalDiffs[n]
-    #   result_df.loc[n, "odr"] = odrs[n]
-    #   result_df.loc[n, "fav"] = favs[n]
-    
     return df.fillna("")
 
   def groundnote(self):
-    return self.get_dfs(self.result_soup)[1]
+    df = pd.DataFrame()
+    dfs = self.get_dfs(self.result_soup)
+    if len(dfs) > 1:
+      df = self.get_dfs(self.result_soup)[1]
+    
+    return df
 
   def payout(self):
-    dfs = self.get_dfs(self.result_soup)[2:4]
-    # if df.empty: 
-    #   return df
-
-    return dfs[0].fillna(""), dfs[1].fillna("")
+    pays = [pd.DataFrame(), pd.DataFrame()]
+    dfs = self.get_dfs(self.result_soup)
+    if len(dfs) > 3:
+      pays = self.get_dfs(self.result_soup)[2:4]
+    
+    return pays[0].fillna(""), pays[1].fillna("")
 
   def srPayout(self):
     soup = self.result_soup

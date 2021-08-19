@@ -41,7 +41,7 @@ class TkRace:
     f_images = tk.Frame(frame, pady=5, padx=5)
     ranks = self.rap_df["rank"]
     names = self.rap_df["name"]
-    colors = ["white", "black", "red", "blue", "yellow", "green", "orange"]
+    colors = ["white", "black", "red", "blue", "yellow", "green", "orange", "pink"]
     colors = colors[:len(ranks)]
     for r, n, c in zip(ranks, names, colors):
       canvas = tk.Canvas(f_images, height=63, width=58, bg=c)
