@@ -6,9 +6,10 @@ from bs4 import BeautifulSoup
 import seaborn as sns
 import urllib.parse
 import pathlib
-from race import Scrape, RaceUrls
+# from race import Soup, Urls
+from race import Race
 
-class Racers(Scrape, RaceUrls):
+class Racers(Race):
 
   names_path = "./racer_names.json"
   racers_path = "./racers.json"

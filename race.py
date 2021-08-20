@@ -7,7 +7,7 @@ import re
 import pathlib
 import datetime
 
-class Scrape:
+class Soup:
 
   def get_soup(self, url: str):
     try: 
@@ -37,7 +37,7 @@ class Scrape:
     else:
       return True
 
-class RaceUrls:
+class Urls:
 
   url_oddspark = "https://www.oddspark.com/autorace"
   
@@ -56,7 +56,7 @@ class RaceUrls:
   placeEn_d = {'川口': 'kawaguchi', '伊勢崎': 'isesaki', '浜松': 'hamamatsu',\
               '飯塚': 'iiduka', '山陽': 'sanyo'}
 
-class Race(Scrape, RaceUrls):
+class Race(Soup, Urls):
 
   def tuple_string_for_copy(self, s):
     # ("20210606", "飯塚") を作成
@@ -108,8 +108,8 @@ class Race(Scrape, RaceUrls):
       races.append(kaisai)
     
     return races
-          
-  def p_kaisai(self):
+
+  def kaisai(self):
     races = self.kaisaiRaces()
     for race in races:
       # if race[-1:] == "*":
@@ -155,9 +155,11 @@ class Race(Scrape, RaceUrls):
 if __name__ == '__main__':
 
   r = Race()
-  r.p_kaisai()
-  print(r.kaisai_today())
-  race = ("20210814", "伊勢崎")
+  r.kaisai()
+  print("*---*")
+  for race in r.kaisai_today():
+    print(race)
+  # race = ("20210814", "伊勢崎")
   # held, titles, dfs = r.entries(race)
   # print(held)
   # print(titles[0])

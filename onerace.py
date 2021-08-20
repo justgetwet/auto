@@ -8,7 +8,6 @@ import seaborn as sns
 from racers import Racers
 # pd.set_option('display.max_columns', 22)
 # from race import Scrape, RaceUrls
-from racers import Racers
 
 # url_racelist = url_oddspark + "/RaceList.do?"
 # url_odds = url_oddspark + "/Odds.do?"
@@ -70,13 +69,31 @@ class OneRace(Racers):
     surface = "(" + surface.strip("走路状況：") + ")"
     title = " ".join([shubetsu, race, start_time, weather, surface])
     return title
+
+  def entry_handicaps(self):
+    # 
+    df = self.get_dfs(self.entry_soup)[0]
+    if df.empty: 
+        return df
+    srs = []
+    for n in range(len(df)):
+      racer_l = df.values[n][:7]
+      racer = [re.sub("  |\u3000", " ", r) for r in racer_l if type(r) == str]
+      lstname, fstname, age, v, machine = racer[0].split()
+      avgTry, avgLap, fstLap = racer[4].split()
+      name = "".join([lstname, fstname])
+      racer2s = racer[2].split()
+      handicap, tryLap, tryDev = racer2s
+      srs.append(pd.Series([n + 1, name, handicap, avgLap], index=["no", "name", "handicap", "avgLap"]))
+
+    return srs
       
   def entry_raps(self):
 
     df = self.get_dfs(self.entry_soup)[0]
     if df.empty: 
         return df
-    sr_lst = []
+    srs = []
     for n in range(len(df)):
       sr = self.sr_racer()
       racer_l = df.values[n][:7]
@@ -113,24 +130,24 @@ class OneRace(Racers):
       sr["avg"] = float(avgLap)
       sr["fst"] = float(fstLap)
       sr.name = n
-      sr_lst.append(sr)
+      srs.append(sr)
 
-    hands = [sr["hand"] for sr in sr_lst]
+    hands = [sr["hand"] for sr in srs]
     # avtLaps = [sr["avt"] for sr in sr_lst] 
-    avgLaps = [sr["avg"] for sr in sr_lst]
-    fstLaps = [sr["fst"] for sr in sr_lst]
-    prdLaps = [sr["prd"] for sr in sr_lst]
+    avgLaps = [sr["avg"] for sr in srs]
+    fstLaps = [sr["fst"] for sr in srs]
+    prdLaps = [sr["prd"] for sr in srs]
     # avtDifs = self.calc_goalDifs(avtLaps, hands)
     avgDifs = self.calc_goalDifs(avgLaps, hands)
     fstDifs = self.calc_goalDifs(fstLaps, hands)
     prdDifs = self.calc_goalDifs(prdLaps, hands)
-    for sr, avgDif, fstDif, prdDif in zip(sr_lst, avgDifs, fstDifs, prdDifs):
+    for sr, avgDif, fstDif, prdDif in zip(srs, avgDifs, fstDifs, prdDifs):
         # sr["atm"] = avtDif
         sr["avm"] = round(avgDif, 1)
         sr["fsm"] = round(fstDif, 1)
         sr["pdm"] = round(prdDif, 1)
     
-    raps_df = pd.DataFrame(sr_lst).dropna(how="all", axis=1)
+    raps_df = pd.DataFrame(srs).dropna(how="all", axis=1)
     
     return raps_df
 
