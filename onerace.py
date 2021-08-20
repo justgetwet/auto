@@ -83,8 +83,11 @@ class OneRace(Racers):
       avgTry, avgLap, fstLap = racer[4].split()
       name = "".join([lstname, fstname])
       racer2s = racer[2].split()
+      if "再" in racer2s: racer2s.remove("再") 
       handicap, tryLap, tryDev = racer2s
-      srs.append(pd.Series([n + 1, name, handicap, avgLap], index=["no", "name", "handicap", "avgLap"]))
+      prdLap = round(float(tryLap) + float(tryDev), 3)
+      idx = ["no", "name", "handicap", "avgLap", "tryLap", "prdLap"]
+      srs.append(pd.Series([n + 1, name, handicap, avgLap, tryLap, prdLap], index=idx))
 
     return srs
       
