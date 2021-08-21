@@ -7,6 +7,7 @@ import seaborn as sns
 from onerace import OneRace
 from odds import RaceOdds
 from tkodds import TkOdds
+from tkplots import TkPlots
 
 class TkRace:
   
@@ -32,10 +33,18 @@ class TkRace:
     f_topbar = tk.Frame(self.frame, height=50, pady=0, padx=5)
     f_topbar.pack(fill=tk.X)
     
-    self.set_images(f_topbar)
+    f_image = tk.Frame(f_topbar)
+    f_image.pack(side=tk.LEFT, expand=True, anchor=tk.W)
+    self.set_images(f_image)
 
-    b_quit = ttk.Button(f_topbar, text='Odds', command=lambda: self.show_odds())
-    b_quit.pack(side=tk.LEFT, expand=True, anchor=tk.E)
+    f_button = tk.Frame(f_topbar)
+    f_button.pack(side=tk.LEFT, anchor=tk.E)
+
+    b_plots = ttk.Button(f_button, text='Plots', command=lambda: self.show_plots())
+    b_plots.pack(side=tk.TOP, expand=True, pady=5)
+
+    b_odds = ttk.Button(f_button, text='Odds', command=lambda: self.show_odds())
+    b_odds.pack(side=tk.TOP, expand=True, pady=5)
 
   def set_images(self, frame):
     f_images = tk.Frame(frame, pady=5, padx=5)
@@ -122,6 +131,10 @@ class TkRace:
     trif = ro.reqTrif()
     dfs = [win, quin, exa, trio, trif]
     t = TkOdds(self.title, dfs, self.tpl)
+    t.run()
+
+  def show_plots(self):
+    t =TkPlots(*self.tpl)
     t.run()
 
   def run(self):
